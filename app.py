@@ -1,85 +1,70 @@
 import streamlit as st
 from prompts import generate_tech_questions
-import time
+from storage import save_submission
 
-st.set_page_config(page_title="TalentScout Hiring Assistant")
-st.title("🤖 TalentScout Hiring Assistant")
+st.set_page_config(page_title="TalentScout Chatbot")
 
-# Initialize session state
-if 'step' not in st.session_state:
+if "step" not in st.session_state:
     st.session_state.step = 0
     st.session_state.data = {}
     st.session_state.questions = []
+    st.session_state.answers = []
 
-# Greet
+st.title("🤖 TalentScout Hiring Assistant")
+
+# Step 0: Greeting
 if st.session_state.step == 0:
-    st.write("Hi, I'm your assistant for initial screening! Type `start` to begin.")
-    user_input = st.text_input("You:", key="greet")
-    if user_input.lower() == "start":
+    st.write("👋 Welcome! Type `start` to begin your interview.")
+    if st.text_input("You:", key="greet").lower() == "start":
         st.session_state.step = 1
         st.rerun()
 
-# Collect Info
+# Step 1: Candidate Info
 elif st.session_state.step == 1:
-    st.write("Let's gather your details.")
-    st.session_state.data['name'] = st.text_input("Full Name")
-    st.session_state.data['email'] = st.text_input("Email")
-    st.session_state.data['phone'] = st.text_input("Phone Number")
-    st.session_state.data['experience'] = st.text_input("Years of Experience")
-    st.session_state.data['position'] = st.text_input("Desired Position")
-    st.session_state.data['location'] = st.text_input("Current Location")
+    st.subheader("📋 Candidate Information")
+    st.session_state.data["name"] = st.text_input("Full Name")
+    st.session_state.data["email"] = st.text_input("Email")
+    st.session_state.data["phone"] = st.text_input("Phone Number")
+    st.session_state.data["experience"] = st.text_input("Years of Experience")
+    st.session_state.data["position"] = st.text_input("Desired Position")
+    st.session_state.data["location"] = st.text_input("Current Location")
 
     if all(st.session_state.data.values()):
         if st.button("Next"):
             st.session_state.step = 2
             st.rerun()
 
-# Collect Tech Stack
+# Step 2: Tech Stack
 elif st.session_state.step == 2:
-    tech_stack = st.text_input("Enter your tech stack (comma separated):")
-    if tech_stack:
-        st.session_state.data['tech_stack'] = [tech.strip() for tech in tech_stack.split(',')]
+    st.subheader("💻 Tech Stack")
+    tech_input = st.text_input("List your tech stack (comma-separated)")
+    if tech_input:
+        tech_stack = [t.strip() for t in tech_input.split(",")]
+        st.session_state.data["tech_stack"] = tech_stack
+        st.session_state.questions = generate_tech_questions(tech_stack)
         st.session_state.step = 3
         st.rerun()
 
-# Generate Questions
+# Step 3: Q&A
 elif st.session_state.step == 3:
-    st.write(f"Tech Stack: {', '.join(st.session_state.data['tech_stack'])}")
-    st.write("Generating questions based on your tech stack...")
-    with st.spinner("Generating..."):
-        questions = generate_tech_questions(st.session_state.data['tech_stack'])
-        st.session_state.questions = questions
-        time.sleep(2)
+    st.subheader("🧪 Answer Technical Questions")
+    for i, question in enumerate(st.session_state.questions):
+        answer = st.text_area(f"{i+1}. {question}", key=f"q{i}")
+        if len(st.session_state.answers) <= i:
+            st.session_state.answers.append(answer)
+        else:
+            st.session_state.answers[i] = answer
+
+    if st.button("Submit Interview"):
+        st.session_state.data["questions"] = st.session_state.questions
+        st.session_state.data["answers"] = st.session_state.answers
+        save_submission(st.session_state.data)
+        st.success("✅ Your responses have been recorded.")
         st.session_state.step = 4
-        st.rerun()
 
-# Show Questions
+# Step 4: Thank You
 elif st.session_state.step == 4:
-    st.write("Please answer the questions below:")  
-    answers = []
-    for idx, question in enumerate(st.session_state.questions, 1):
-        answer = st.text_input(f"Q{idx}: {question}", key=f"answer_{idx}")
-        answers.append(answer)
-
-    all_answered = all(ans.strip() for ans in answers)
-    if st.button("Submit Answers", disabled=not all_answered):
-        for idx, ans in enumerate(answers, 1):
-            st.session_state.data[f"answer_{idx}"] = ans
-        st.write("Thank you for your answers! We will review them and get back to you.")
-        st.session_state.step = 5
+    st.write("🎉 Thank you for completing the interview!")
+    if st.button("Start Over"):
+        st.session_state.clear()
         st.rerun()
-
-# Final Step
-elif st.session_state.step == 5:
-    st.write("You have completed the initial screening!")
-    if st.button("End Chat"):
-        st.write("Thank you! Our team will reach out to you soon.")
-        st.session_state.step = 0
-
-
-
-    # # for idx, q in enumerate(st.session_state.questions, 1):
-    # #     st.write(f"{idx}. {q}")
-    # if st.button("End Chat"):
-    #     st.write("Thank you! Our team will reach out to you soon.")
-    #     st.session_state.step = 0
