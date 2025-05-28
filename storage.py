@@ -4,7 +4,10 @@ import os
 def save_submission(data, filename="submissions.json"):
     if os.path.exists(filename):
         with open(filename, "r") as f:
-            existing = json.load(f)
+            try:
+                existing = json.load(f)
+            except json.JSONDecodeError:
+                existing = []
     else:
         existing = []
 
