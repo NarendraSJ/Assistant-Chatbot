@@ -116,7 +116,7 @@ def chatbot_logic(user_input):
             data["questions"] = st.session_state.questions
             data["answers"] = st.session_state.answers
             save_submission(data)
-            bot_says("✅ Thanks! Your interview has been submitted.")
+            bot_says("🎉 Thank you! Your interview submission has been recorded successfully.\n\n📬 We'll review your answers and get in touch if you're shortlisted.\n\n🔄 You can refresh the page to restart or try applying for a different role.")
             st.session_state.step = "done"
 
     elif step == "done":
