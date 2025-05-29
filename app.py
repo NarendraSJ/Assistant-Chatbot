@@ -127,3 +127,10 @@ if prompt := st.chat_input("Type your response..."):
         st.markdown(prompt)
     st.session_state.messages.append({"role": "user", "content": prompt})
     chatbot_logic(prompt)
+
+st.markdown("""
+<hr style="margin-top: 2em;"/>
+<p style='text-align: center; color: gray; font-size: 0.9em'>
+    👨‍💻 Made with ❤️ by <strong>NSJ</strong>
+</p>
+""", unsafe_allow_html=True)
